@@ -32,7 +32,7 @@ OG.close()
 Mod.close()
 PatchFile.close()
 
-PatchFile = open('BinaryPatch.bp', 'rb+') #If I assign two different patch file variables from the start then the length returned from os.seek_end is incorrect for some reason
+PatchFile = open('BinaryPatch.bp', 'rb+') #If I assign two different patch file variables from the start then the length returned from os.seek_end is incorrect for some reason so I have to do this. sorry
 PatchFile.seek(-3, os.SEEK_END) #Three places back so it catches the comma
 PatchFile.truncate() #Deletes last comma
 
