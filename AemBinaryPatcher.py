@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 
 Arguments = sys.argv[1:]
 FileDirectory = Arguments[0]
@@ -16,23 +17,28 @@ if os.path.exists("BinaryPatch.bp"):
 
 OG = open(OriginalFile, 'rb')
 Mod = open(ModifiedFile, 'rb')
-PatchFileA = open('BinaryPatch.bp', 'a') #Patchfile edited as a text file
-PatchFileB = open('BinaryPatch.bp', 'rb+') #Patchfile edited as a binary file
+PatchFile = open('BinaryPatch.bp', 'a')
 
-PatchFileA.write('{\n  "Version": 1,\n  "Patches": [\n') #Beginning of bp file
+PatchFile.write('{\n  "Version": 1,\n  "Patches": [\n') #Beginning of bp file
 
 for i in range(FileLength): #Goes through the entire file(s) byte by byte
     OG.seek(i) #Increments file pointer \ offset
     Mod.seek(i)
     if not OG.read(1) == Mod.read(1): #Checks if bytes are the same or not
         Mod.seek(i) #It uses the next byte if I don't re-declare this for some reason, and I have no idea why
-        PatchFileA.write(f'    {{\n      "file": "{FileDirectory}",\n      "offset": {i},\n      "data": "{(Mod.read(1)).hex()}"\n    }},\n') #Writes patches
-
-PatchFileB.seek(-3, os.SEEK_END) #goes three bytes from the end of the file to get to the last comma
-PatchFileB.truncate() #Removes last comma
-PatchFileA.write("\n  ]\n}") #End of bp file
+        PatchFile.write(f'    {{\n      "file": "{FileDirectory}",\n      "offset": {i},\n      "data": "{(Mod.read(1)).hex()}"\n    }},\n') #Writes patches
 
 OG.close()
 Mod.close()
-PatchFileA.close()
-PatchFileB.close()
+PatchFile.close()
+
+PatchFile = open('BinaryPatch.bp', 'rb+') #If I assign two different patch file variables from the start then the length returned from os.seek_end is incorrect for some reason
+PatchFile.seek(-3, os.SEEK_END) #Three places back so it catches the comma
+PatchFile.truncate() #Deletes last comma
+
+PatchFile.close()
+
+PatchFile = open('BinaryPatch.bp', 'a')
+PatchFile.write("\n  ]\n}") #End of bp file
+
+PatchFile.close()
