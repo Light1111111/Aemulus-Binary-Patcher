@@ -31,3 +31,8 @@ for i in range(FileLength): #Goes through the entire file(s) byte by byte
 PatchFileB.seek(-3, os.SEEK_END) #goes three bytes from the end of the file to get to the last comma
 PatchFileB.truncate() #Removes last comma
 PatchFileA.write("\n  ]\n}") #End of bp file
+
+OG.close()
+Mod.close()
+PatchFileA.close()
+PatchFileB.close()
