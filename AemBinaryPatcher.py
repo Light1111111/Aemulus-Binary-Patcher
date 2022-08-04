@@ -7,37 +7,38 @@ OriginalFile = Arguments[1]
 ModifiedFile = Arguments[2]
 FileLength = os.path.getsize(OriginalFile)
 
-if Arguments == []:
-    print("Erorr: no files specified in argument")
-    quit()
-
 if os.path.exists("BinaryPatch.bp"):
     os.remove("BinaryPatch.bp")
 
 OG = open(OriginalFile, 'rb')
 Mod = open(ModifiedFile, 'rb')
 PatchFile = open('BinaryPatch.bp', 'a')
-OverOneByteList = []
+OffSet = 0
 
 PatchFile.write('{\n  "Version": 1,\n  "Patches": [\n') #Beginning of bp file
 
-def OverOneBytePatch(Counter): #Function that checks if more than one bytes are different to the original file in a row
-    OG.seek(i + Counter)  # Increments file pointer \ offset
-    Mod.seek(i + Counter)
-    if not OG.read(1) == Mod.read(1): #Checks if bytes are the same or not
-        OverOneByteList.append(i + Counter) #Adds specific offset to exclusion list so duplicate patches aren't created
-        Mod.seek(i + Counter) #It uses the next byte if I don't re-declare this for some reason, and I have no idea why
-        PatchFile.write(f' {(Mod.read(1)).hex()}') #Writes patches
-        OverOneBytePatch(Counter + 1)
 
-for i in range(FileLength): #Goes through the entire file(s) byte by byte
-    OG.seek(i) #Increments file pointer \ offset
-    Mod.seek(i)
-    if not OG.read(1) == Mod.read(1) and i not in OverOneByteList: #Checks if bytes are the same or not
-        Mod.seek(i) #It uses the next byte if I don't re-declare this for some reason, and I have no idea why
-        PatchFile.write(f'    {{\n      "file": "{FileDirectory}",\n      "offset": {i},\n      "data": "{(Mod.read(1)).hex()}') #Writes patches
-        OverOneBytePatch(1)
+def OverOneBytePatch(OffSet): #Function that checks if more than one bytes are different to the original file in a row
+    OffSet = OffSet + 1 # Increments file offset \ pointer
+    OG.seek(OffSet)
+    Mod.seek(OffSet)
+    if not OG.read(1) == Mod.read(1): #Checks if bytes are the same or not
+        Mod.seek(OffSet) #It uses the wrong byte if I don't re-declare this for some reason
+        PatchFile.write(f' {(Mod.read(1)).hex()}') #Writes patches
+        OffSet = OverOneBytePatch(OffSet)
+    return OffSet
+
+
+while OffSet < FileLength:
+    OG.seek(OffSet)
+    Mod.seek(OffSet)
+    if not OG.read(1) == Mod.read(1):
+        Mod.seek(OffSet)
+        PatchFile.write(f'    {{\n      "file": "{FileDirectory}",\n      "offset": {OffSet},\n      "data": "{(Mod.read(1)).hex()}')  # Writes patches
+        OffSet = OverOneBytePatch(OffSet)
         PatchFile.write(f'"\n    }},\n')
+    OffSet = OffSet + 1
+
 
 OG.close()
 Mod.close()
